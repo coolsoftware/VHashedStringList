@@ -1,0 +1,42 @@
+VHashedStringList
+
+Copyright 2012 Coolsoftware.
+http://blog.coolsoftware.ru/
+
+TVHashedStringList is an improved hashed string list.
+
+TVHashedStringList - это список строк, в котором оптимизированы поиск строк (метод IndexOf) и значений (метод IndexOfName).
+Этот поиск осуществляется с использованием хеш-индекса.
+
+TVHashedStringList - аналог стандартного THashedStringList (фактически, он сделан на его основе, хотя наследуется не от него, а от TStringList).
+Существенное отличие от THashedStringList заключается в том, что оптимизированы операции перестроения индекса при изменении списка.
+В THashedStringList полное перестроение индекса требуется после любого изменения, что приводит к значительным задержкам в реальных приложениях.
+Например, в следующем примере полное перестроение индекса будет произведено 3 раза:
+
+procedure ChangeList(lst: THashedStringList)
+begin
+  lst.Values['key1'] := 'Value1';
+  lst.Values['key2'] := 'Value2'; //неявный вызов IndexOfName и перестроение индекса
+  lst.Values['key3'] := 'Value3'; //неявный вызов IndexOfName и перестроение индекса
+  lst.Values['key4'] := 'Value4'; //неявный вызов IndexOfName и перестроение индекса
+end;
+
+В отличие от THashedStringList, TVHashedStringList не требует полного перестроения индекса после добавления нового элемента в конец списка или
+при изменении значений элементов списка. Перестроение происходит только после вставки нового элемента в список или удаления из списка.
+Поэтому в следующем примере полного перестроения индекса не произойдет ни разу.
+
+procedure ChangeList(lst: TVHashedStringList)
+begin
+  lst.Values['key1'] := 'Value1'; //индекс модифицирован и не требует перестроения
+  lst.Values['key2'] := 'Value2'; //индекс модифицирован и не требует перестроения
+  lst.Values['key3'] := 'Value3'; //индекс модифицирован и не требует перестроения
+  lst.Values['key4'] := 'Value4'; //индекс модифицирован и не требует перестроения
+end;
+
+TestVHashedStringList - это демонстрационный проект, который позволяет оценить разницу в скорости работы между TStringList и TVHashedStringList.
+
+Вы можете использовать TVHashedStringList в своих проектах без каких-либо ограничений.
+При публикации исходников ссылка на http://blog.coolsoftware.ru/ обязательна.
+
+Свои отзывы/предложения можете присылать на vitaly@coolsoftware.ru
+
