@@ -13,7 +13,7 @@ TVHashedStringList - аналог стандартного THashedStringList (фактически, он сдела
 В THashedStringList полное перестроение индекса требуется после любого изменения, что приводит к значительным задержкам в реальных приложениях.
 Например, в следующем примере полное перестроение индекса будет произведено 3 раза:
 
-procedure ChangeList(lst: THashedStringList)
+procedure ChangeList(lst: THashedStringList);
 begin
   lst.Values['key1'] := 'Value1';
   lst.Values['key2'] := 'Value2'; //неявный вызов IndexOfName и перестроение индекса
@@ -25,7 +25,7 @@ end;
 при изменении значений элементов списка. Перестроение происходит только после вставки нового элемента в список или удаления из списка.
 Поэтому в следующем примере полного перестроения индекса не произойдет ни разу.
 
-procedure ChangeList(lst: TVHashedStringList)
+procedure ChangeList(lst: TVHashedStringList);
 begin
   lst.Values['key1'] := 'Value1'; //индекс модифицирован и не требует перестроения
   lst.Values['key2'] := 'Value2'; //индекс модифицирован и не требует перестроения
