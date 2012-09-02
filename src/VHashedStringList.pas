@@ -48,21 +48,29 @@ type
     FNameHash: TVStringHash;
     FValueHashValid: Boolean;
     FNameHashValid: Boolean;
-    procedure UpdateValueHash;
-    procedure UpdateNameHash;
+    FOwnsObjects: Boolean;
     function GetValue(const Name: String): String;
     procedure SetValue(const Name, Value: String);
+    function GetValueObject(const Name: String): TObject;
+    procedure SetValueObject(const Name: String; AValue: TObject);
+  public
+    procedure UpdateValueHash;
+    procedure UpdateNameHash;
   protected
     procedure Changed; override;
     procedure InsertItem(Index: Integer; const S: String; AObject: TObject); override;
     procedure Put(Index: Integer; const S: String); override;
+    procedure PutObject(Index: Integer; AObject: TObject); override;
   public
     constructor Create(BucketsSize: Cardinal = 256);
     destructor Destroy; override;
+    procedure Clear; override;
     procedure Delete(Index: Integer); override;
     function IndexOf(const S: String): Integer; override;
     function IndexOfName(const Name: String): Integer; override;
     property Values[const Name: String]: String read GetValue write SetValue;
+    property ValueObjects[const Name: String]: TObject read GetValueObject write SetValueObject;
+    property OwnsObjects: Boolean read FOwnsObjects write FOwnsObjects;
   end;
 
 implementation
@@ -216,6 +224,18 @@ begin
   FNameHashValid := False;
 end;
 
+procedure TVHashedStringList.Clear;
+var
+  I: Integer;
+begin
+  if FOwnsObjects then
+  begin
+    for I := 0 to Count-1 do
+      PutObject(I, nil);
+  end;
+  inherited Clear;
+end;
+
 constructor TVHashedStringList.Create(BucketsSize: Cardinal);
 begin
   inherited Create;
@@ -224,15 +244,25 @@ begin
   FNameHash := nil;
   FValueHashValid := False;
   FNameHashValid := False;
+  FOwnsObjects := False;
 end;
 
 procedure TVHashedStringList.Delete(Index: Integer);
 begin
+  if FOwnsObjects then
+    PutObject(Index, nil);
   inherited;
 end;
 
 destructor TVHashedStringList.Destroy;
+var
+  I: Integer;
 begin
+  if FOwnsObjects then
+  begin
+    for I := 0 to Count-1 do
+      PutObject(I, nil);
+  end;
   if Assigned(FValueHash) then
     FValueHash.Free;
   if Assigned(FNameHash) then
@@ -248,6 +278,16 @@ begin
   if I >= 0 then
     Result := Copy(Get(I), Length(Name) + 2, MaxInt) else
     Result := '';
+end;
+
+function TVHashedStringList.GetValueObject(const Name: String): TObject;
+var
+  I: Integer;
+begin
+  I := IndexOf(Name);
+  if I >= 0 then
+    Result := GetObject(I) else
+    Result := nil;
 end;
 
 function TVHashedStringList.IndexOf(const S: String): Integer;
@@ -366,6 +406,18 @@ begin
   end;
 end;
 
+procedure TVHashedStringList.PutObject(Index: Integer; AObject: TObject);
+var
+  obj: TObject;
+begin
+  if FOwnsObjects then
+  begin
+    obj := GetObject(Index);
+    if Assigned(obj) then obj.Free;
+  end;
+  inherited PutObject(Index, AObject);
+end;
+
 procedure TVHashedStringList.SetValue(const Name, Value: String);
 var
   I: Integer;
@@ -377,6 +429,24 @@ begin
       Add(Name + NameValueSeparator + Value)
     else
       Put(I, Name + NameValueSeparator + Value);
+  end else
+  begin
+    if I >= 0 then Delete(I);
+  end;
+end;
+
+procedure TVHashedStringList.SetValueObject(const Name: String;
+  AValue: TObject);
+var
+  I: Integer;
+begin
+  I := IndexOf(Name);
+  if AValue <> nil then
+  begin
+    if I < 0 then
+      AddObject(Name, AValue)
+    else
+      PutObject(I, AValue);
   end else
   begin
     if I >= 0 then Delete(I);
