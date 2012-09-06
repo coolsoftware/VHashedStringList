@@ -1,7 +1,5 @@
 unit VHashedStringList;
 
-interface
-
 (*
 Copyright 2012 Coolsoftware. http://blog.coolsoftware.ru/
 
@@ -11,6 +9,8 @@ You can freely use this program and code for your needs.
 
 Please, don't remove this copyright.
 *)
+
+interface
 
 uses SysUtils, Classes, Windows;
 
@@ -38,6 +38,8 @@ type
 //    function Modify(const Key: String; Value: Integer): Boolean;
 //    procedure Remove(const Key: String);
     function Delete(const Key: String; Value: Integer): Boolean;
+    procedure DecValues(Value: Integer);
+    procedure IncValues(Value: Integer);
     function ValueOf(const Key: String): Integer;
   end;
 
@@ -49,6 +51,7 @@ type
     FValueHashValid: Boolean;
     FNameHashValid: Boolean;
     FOwnsObjects: Boolean;
+    FAutoUpdateHash: Boolean;
     function GetValue(const Name: String): String;
     procedure SetValue(const Name, Value: String);
     function GetValueObject(const Name: String): TObject;
@@ -71,6 +74,7 @@ type
     property Values[const Name: String]: String read GetValue write SetValue;
     property ValueObjects[const Name: String]: TObject read GetValueObject write SetValueObject;
     property OwnsObjects: Boolean read FOwnsObjects write FOwnsObjects;
+    property AutoUpdateHash: Boolean read FAutoUpdateHash write FAutoUpdateHash;
   end;
 
 implementation
@@ -215,6 +219,40 @@ begin
     Result := -1;
 end;
 
+procedure TVStringHash.DecValues(Value: Integer);
+var
+  P: PVHashItem;
+  I: Integer;
+begin
+  for I := 0 to Length(FBuckets) - 1 do
+  begin
+    P := FBuckets[I];
+    while P <> nil do
+    begin
+      if P^.Value > Value then
+        Dec(P^.Value);
+      P := P^.Next;
+    end;
+  end;
+end;
+
+procedure TVStringHash.IncValues(Value: Integer);
+var
+  P: PVHashItem;
+  I: Integer;
+begin
+  for I := 0 to Length(FBuckets) - 1 do
+  begin
+    P := FBuckets[I];
+    while P <> nil do
+    begin
+      if P^.Value > Value then
+        Inc(P^.Value);
+      P := P^.Next;
+    end;
+  end;
+end;
+
 { TVHashedStringList }
 
 procedure TVHashedStringList.Changed;
@@ -245,13 +283,56 @@ begin
   FValueHashValid := False;
   FNameHashValid := False;
   FOwnsObjects := False;
+  FAutoUpdateHash := True;
 end;
 
 procedure TVHashedStringList.Delete(Index: Integer);
+var
+  bValueHashValid: Boolean;
+  bNameHashValid: Boolean;
+  Key, OldValue: String;
+  P: Integer;
 begin
   if FOwnsObjects then
     PutObject(Index, nil);
-  inherited;
+  if FAutoUpdateHash then
+  begin
+    OldValue := Get(Index);
+    bValueHashValid := FValueHashValid;
+    bNameHashValid := FNameHashValid;
+    inherited;
+    if bValueHashValid then
+    begin
+      if FValueHash = nil then
+        FValueHash := TVStringHash.Create(FBucketsSize);
+      if not CaseSensitive then
+      begin
+        FValueHash.Delete(AnsiUpperCase(OldValue), Index);
+      end else
+      begin
+        FValueHash.Delete(OldValue, Index);
+      end;
+      FValueHash.DecValues(Index);
+      FValueHashValid := True;
+    end;
+    if bNameHashValid then
+    begin
+      if FNameHash = nil then
+        FNameHash := TVStringHash.Create(FBucketsSize);
+      P := AnsiPos(NameValueSeparator, OldValue);
+      if P <> 0 then
+      begin
+        if not CaseSensitive then
+          Key := AnsiUpperCase(Copy(OldValue, 1, P - 1))
+        else
+          Key := Copy(OldValue, 1, P - 1);
+        FNameHash.Delete(Key, Index);
+        FNameHash.DecValues(Index);
+      end;
+      FNameHashValid := True;
+    end;
+  end else
+    inherited;
 end;
 
 destructor TVHashedStringList.Destroy;
@@ -316,7 +397,7 @@ var
   Key: String;
   P: Integer;
 begin
-  if Index = Count then
+  if FAutoUpdateHash and (Index = Count) then
   begin
     //if add new item then update hash
     bValueHashValid := FValueHashValid;
@@ -361,49 +442,53 @@ var
 begin
   OldValue := Get(Index);
   if OldValue = S then Exit;
-  bValueHashValid := FValueHashValid;
-  bNameHashValid := FNameHashValid;
-  inherited Put(Index, S);
-  if bValueHashValid then
+  if FAutoUpdateHash then
   begin
-    if FValueHash = nil then
-      FValueHash := TVStringHash.Create(FBucketsSize);
-    if not CaseSensitive then
+    bValueHashValid := FValueHashValid;
+    bNameHashValid := FNameHashValid;
+    inherited Put(Index, S);
+    if bValueHashValid then
     begin
-      FValueHash.Delete(AnsiUpperCase(OldValue), Index);
-      FValueHash.Add(AnsiUpperCase(Self[Index]), Index);
-    end else
-    begin
-      FValueHash.Delete(OldValue, Index);
-      FValueHash.Add(Self[Index], Index);
-    end;
-    FValueHashValid := True;
-  end;
-  if bNameHashValid then
-  begin
-    if FNameHash = nil then
-      FNameHash := TVStringHash.Create(FBucketsSize);
-    P := AnsiPos(NameValueSeparator, OldValue);
-    if P <> 0 then
-    begin
+      if FValueHash = nil then
+        FValueHash := TVStringHash.Create(FBucketsSize);
       if not CaseSensitive then
-        Key := AnsiUpperCase(Copy(OldValue, 1, P - 1))
-      else
-        Key := Copy(OldValue, 1, P - 1);
-      FNameHash.Delete(Key, Index);
+      begin
+        FValueHash.Delete(AnsiUpperCase(OldValue), Index);
+        FValueHash.Add(AnsiUpperCase(Self[Index]), Index);
+      end else
+      begin
+        FValueHash.Delete(OldValue, Index);
+        FValueHash.Add(Self[Index], Index);
+      end;
+      FValueHashValid := True;
     end;
-    Key := Get(Index);
-    P := AnsiPos(NameValueSeparator, Key);
-    if P <> 0 then
+    if bNameHashValid then
     begin
-      if not CaseSensitive then
-        Key := AnsiUpperCase(Copy(Key, 1, P - 1))
-      else
-        Key := Copy(Key, 1, P - 1);
-      FNameHash.Add(Key, Index);
+      if FNameHash = nil then
+        FNameHash := TVStringHash.Create(FBucketsSize);
+      P := AnsiPos(NameValueSeparator, OldValue);
+      if P <> 0 then
+      begin
+        if not CaseSensitive then
+          Key := AnsiUpperCase(Copy(OldValue, 1, P - 1))
+        else
+          Key := Copy(OldValue, 1, P - 1);
+        FNameHash.Delete(Key, Index);
+      end;
+      Key := Get(Index);
+      P := AnsiPos(NameValueSeparator, Key);
+      if P <> 0 then
+      begin
+        if not CaseSensitive then
+          Key := AnsiUpperCase(Copy(Key, 1, P - 1))
+        else
+          Key := Copy(Key, 1, P - 1);
+        FNameHash.Add(Key, Index);
+      end;
+      FNameHashValid := True;
     end;
-    FNameHashValid := True;
-  end;
+  end else
+    inherited;
 end;
 
 procedure TVHashedStringList.PutObject(Index: Integer; AObject: TObject);

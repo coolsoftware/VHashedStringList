@@ -1,7 +1,5 @@
 unit Unit1;
 
-interface
-
 (*
 Copyright 2012 Coolsoftware. http://blog.coolsoftware.ru/
 
@@ -11,6 +9,8 @@ You can freely use this program and code for your needs.
 
 Please, don't remove this copyright.
 *)
+
+interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
@@ -31,11 +31,18 @@ type
     RadioButton2: TRadioButton;
     CheckBox1: TCheckBox;
     Label7: TLabel;
+    CheckBox2: TCheckBox;
+    Label8: TLabel;
+    Edit3: TEdit;
+    Label9: TLabel;
+    Label10: TLabel;
     procedure Button1Click(Sender: TObject);
     procedure Label7Click(Sender: TObject);
   private
     { Private declarations }
-    procedure Test(nSet, nGet: Integer; bTVHashedStringList, bGetListItems: Boolean);
+    procedure Test(nSet, nGet, nDel: Integer;
+      bTVHashedStringList, bGetListItems,
+      bAutoUpdateHash: Boolean);
   public
     { Public declarations }
   end;
@@ -51,12 +58,14 @@ uses ShellAPI;
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
-  Test(StrToInt(Edit1.Text), StrToInt(Edit2.Text), RadioButton2.Checked, CheckBox1.Checked);
+  Test(StrToInt(Edit1.Text), StrToInt(Edit2.Text), StrToInt(Edit3.Text),
+    RadioButton2.Checked, CheckBox1.Checked, CheckBox2.Checked);
 end;
 
-procedure TForm1.Test(nSet, nGet: Integer; bTVHashedStringList, bGetListItems: Boolean);
+procedure TForm1.Test(nSet, nGet, nDel: Integer;
+  bTVHashedStringList, bGetListItems, bAutoUpdateHash: Boolean);
 var
-  i, j: Integer;
+  i, j, n: Integer;
   s, t: String;
   lst: TStringList;
   dwTick: DWORD;
@@ -65,8 +74,10 @@ begin
   SetLength(s, 8);
   SetLength(t, 16);
   if bTVHashedStringList then
-    lst := TVHashedStringList.Create
-  else
+  begin
+    lst := TVHashedStringList.Create;
+    TVHashedStringList(lst).AutoUpdateHash := bAutoUpdateHash;
+  end else
     lst := TStringList.Create;
   dwTick := GetTickCount;
   for i := 1 to nSet do
@@ -104,6 +115,19 @@ begin
   end;
   dwTick := GetTickCount - dwTick;
   Label6.Caption := IntToStr(dwTick);
+  dwTick := GetTickCount;
+  n := lst.Count;
+  for i := 1 to nDel do
+  begin
+    if lst.Count = 0 then Break;
+    j := Random(lst.Count);
+    s := lst.Names[j];
+    lst.Values[s] := '';
+  end;
+  if lst.Count + nDel <> n then
+    raise Exception.Create('Error!');
+  dwTick := GetTickCount - dwTick;
+  Label10.Caption := IntToStr(dwTick);
   lst.Free;
 end;
 

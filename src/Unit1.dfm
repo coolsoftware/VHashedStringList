@@ -1,9 +1,9 @@
 object Form1: TForm1
   Left = 1248
   Top = 481
-  Width = 412
-  Height = 317
-  Caption = 'Test TVHashedStringList'
+  Width = 515
+  Height = 352
+  Caption = 'TVHashedStringList Test'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -72,12 +72,33 @@ object Form1: TForm1
     ParentFont = False
     OnClick = Label7Click
   end
+  object Label8: TLabel
+    Left = 336
+    Top = 18
+    Width = 65
+    Height = 13
+    Caption = 'Delete Count:'
+  end
+  object Label9: TLabel
+    Left = 144
+    Top = 274
+    Width = 94
+    Height = 13
+    Caption = 'Delete Time (msec):'
+  end
+  object Label10: TLabel
+    Left = 256
+    Top = 274
+    Width = 6
+    Height = 13
+    Caption = '0'
+  end
   object Button1: TButton
     Left = 144
     Top = 160
     Width = 121
     Height = 25
-    Caption = 'Set Values'
+    Caption = 'Test'
     TabOrder = 0
     OnClick = Button1Click
   end
@@ -124,5 +145,23 @@ object Form1: TForm1
     Checked = True
     State = cbChecked
     TabOrder = 5
+  end
+  object CheckBox2: TCheckBox
+    Left = 288
+    Top = 120
+    Width = 121
+    Height = 17
+    Caption = 'AutoUpdateHash'
+    Checked = True
+    State = cbChecked
+    TabOrder = 6
+  end
+  object Edit3: TEdit
+    Left = 416
+    Top = 16
+    Width = 65
+    Height = 21
+    TabOrder = 7
+    Text = '100'
   end
 end
