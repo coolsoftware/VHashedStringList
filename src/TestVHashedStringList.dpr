@@ -13,7 +13,8 @@ Please, don't remove this copyright.
 uses
   Forms,
   Unit1 in 'Unit1.pas' {Form1},
-  VHashedStringList in 'VHashedStringList.pas';
+  VHashedStringList in 'VHashedStringList.pas',
+  murmurhash in 'murmurhash.pas';
 
 {$R *.res}
 

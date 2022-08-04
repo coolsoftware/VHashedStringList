@@ -1,9 +1,9 @@
 object Form1: TForm1
   Left = 1248
   Top = 481
-  Width = 515
-  Height = 352
   Caption = 'TVHashedStringList Test'
+  ClientHeight = 313
+  ClientWidth = 499
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -163,5 +163,13 @@ object Form1: TForm1
     Height = 21
     TabOrder = 7
     Text = '100'
+  end
+  object CheckBox3: TCheckBox
+    Left = 288
+    Top = 143
+    Width = 97
+    Height = 17
+    Caption = 'MurMur hash'
+    TabOrder = 8
   end
 end

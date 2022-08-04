@@ -43,6 +43,8 @@ type
     function ValueOf(const Key: String): Integer;
   end;
 
+  TVStringHashClass = class of TVStringHash;
+
   TVHashedStringList = class(TStringList)
   private
     FBucketsSize: Cardinal;
@@ -52,6 +54,7 @@ type
     FNameHashValid: Boolean;
     FOwnsObjects: Boolean;
     FAutoUpdateHash: Boolean;
+    FHashClass: TVStringHashClass;
     function GetValue(const Name: String): String;
     procedure SetValue(const Name, Value: String);
     function GetValueObject(const Name: String): TObject;
@@ -75,6 +78,7 @@ type
     property ValueObjects[const Name: String]: TObject read GetValueObject write SetValueObject;
     property OwnsObjects: Boolean read FOwnsObjects write FOwnsObjects;
     property AutoUpdateHash: Boolean read FAutoUpdateHash write FAutoUpdateHash;
+    property HashClass: TVStringHashClass read FHashClass write FHashClass;
   end;
 
 implementation
@@ -284,6 +288,7 @@ begin
   FNameHashValid := False;
   FOwnsObjects := False;
   FAutoUpdateHash := True;
+  FHashClass := TVStringHash;
 end;
 
 procedure TVHashedStringList.Delete(Index: Integer);
@@ -304,7 +309,7 @@ begin
     if bValueHashValid then
     begin
       if FValueHash = nil then
-        FValueHash := TVStringHash.Create(FBucketsSize);
+        FValueHash := FHashClass.Create(FBucketsSize);
       if not CaseSensitive then
       begin
         FValueHash.Delete(AnsiUpperCase(OldValue), Index);
@@ -318,7 +323,7 @@ begin
     if bNameHashValid then
     begin
       if FNameHash = nil then
-        FNameHash := TVStringHash.Create(FBucketsSize);
+        FNameHash := FHashClass.Create(FBucketsSize);
       P := AnsiPos(NameValueSeparator, OldValue);
       if P <> 0 then
       begin
@@ -406,7 +411,7 @@ begin
     if bValueHashValid then
     begin
       if FValueHash = nil then
-        FValueHash := TVStringHash.Create(FBucketsSize);
+        FValueHash := FHashClass.Create(FBucketsSize);
       if not CaseSensitive then
         FValueHash.Add(AnsiUpperCase(Self[Index]), Index)
       else
@@ -416,7 +421,7 @@ begin
     if bNameHashValid then
     begin
       if FNameHash = nil then
-        FNameHash := TVStringHash.Create(FBucketsSize);
+        FNameHash := FHashClass.Create(FBucketsSize);
       Key := Get(Index);
       P := AnsiPos(NameValueSeparator, Key);
       if P <> 0 then
@@ -450,7 +455,7 @@ begin
     if bValueHashValid then
     begin
       if FValueHash = nil then
-        FValueHash := TVStringHash.Create(FBucketsSize);
+        FValueHash := FHashClass.Create(FBucketsSize);
       if not CaseSensitive then
       begin
         FValueHash.Delete(AnsiUpperCase(OldValue), Index);
@@ -465,7 +470,7 @@ begin
     if bNameHashValid then
     begin
       if FNameHash = nil then
-        FNameHash := TVStringHash.Create(FBucketsSize);
+        FNameHash := FHashClass.Create(FBucketsSize);
       P := AnsiPos(NameValueSeparator, OldValue);
       if P <> 0 then
       begin
@@ -547,7 +552,7 @@ begin
   if FNameHashValid then Exit;
   
   if FNameHash = nil then
-    FNameHash := TVStringHash.Create(FBucketsSize)
+    FNameHash := FHashClass.Create(FBucketsSize)
   else
     FNameHash.Clear;
   for I := 0 to Count - 1 do
@@ -573,7 +578,7 @@ begin
   if FValueHashValid then Exit;
 
   if FValueHash = nil then
-    FValueHash := TVStringHash.Create(FBucketsSize)
+    FValueHash := FHashClass.Create(FBucketsSize)
   else
     FValueHash.Clear;
   for I := 0 to Count - 1 do
@@ -585,3 +590,4 @@ begin
 end;
 
 end.
+

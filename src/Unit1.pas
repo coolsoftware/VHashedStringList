@@ -36,13 +36,14 @@ type
     Edit3: TEdit;
     Label9: TLabel;
     Label10: TLabel;
+    CheckBox3: TCheckBox;
     procedure Button1Click(Sender: TObject);
     procedure Label7Click(Sender: TObject);
   private
     { Private declarations }
     procedure Test(nSet, nGet, nDel: Integer;
       bTVHashedStringList, bGetListItems,
-      bAutoUpdateHash: Boolean);
+      bAutoUpdateHash, bMurMurHash: Boolean);
   public
     { Public declarations }
   end;
@@ -52,18 +53,18 @@ var
 
 implementation
 
-uses ShellAPI;
+uses ShellAPI, murmurhash;
 
 {$R *.dfm}
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
   Test(StrToInt(Edit1.Text), StrToInt(Edit2.Text), StrToInt(Edit3.Text),
-    RadioButton2.Checked, CheckBox1.Checked, CheckBox2.Checked);
+    RadioButton2.Checked, CheckBox1.Checked, CheckBox2.Checked, CheckBox3.Checked);
 end;
 
 procedure TForm1.Test(nSet, nGet, nDel: Integer;
-  bTVHashedStringList, bGetListItems, bAutoUpdateHash: Boolean);
+  bTVHashedStringList, bGetListItems, bAutoUpdateHash, bMurMurHash: Boolean);
 var
   i, j, n: Integer;
   s, t: String;
@@ -77,6 +78,8 @@ begin
   begin
     lst := TVHashedStringList.Create;
     TVHashedStringList(lst).AutoUpdateHash := bAutoUpdateHash;
+    if bMurMurHash then
+      TVHashedStringList(lst).HashClass := TMurMurHash;
   end else
     lst := TStringList.Create;
   dwTick := GetTickCount;
