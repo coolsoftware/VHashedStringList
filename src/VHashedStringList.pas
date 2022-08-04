@@ -52,9 +52,12 @@ type
     FNameHash: TVStringHash;
     FValueHashValid: Boolean;
     FNameHashValid: Boolean;
+{$IFDEF VER150} //Delphi 7
     FOwnsObjects: Boolean;
+{$ENDIF}
     FAutoUpdateHash: Boolean;
     FHashClass: TVStringHashClass;
+    FKeepEmptyValues: Boolean;
     function GetValue(const Name: String): String;
     procedure SetValue(const Name, Value: String);
     function GetValueObject(const Name: String): TObject;
@@ -66,19 +69,29 @@ type
     procedure Changed; override;
     procedure InsertItem(Index: Integer; const S: String; AObject: TObject); override;
     procedure Put(Index: Integer; const S: String); override;
+{$IFDEF VER150} //Delphi 7
     procedure PutObject(Index: Integer; AObject: TObject); override;
+{$ENDIF}
   public
-    constructor Create(BucketsSize: Cardinal = 256);
+    constructor Create(BucketsSize: Cardinal = 256); overload;
+{$IFNDEF VER150} //not Delphi 7
+    constructor Create(OwnsObjects: Boolean; BucketsSize: Cardinal = 256); overload;
+{$ENDIF}
     destructor Destroy; override;
+{$IFDEF VER150} //Delphi 7
     procedure Clear; override;
+{$ENDIF}
     procedure Delete(Index: Integer); override;
     function IndexOf(const S: String): Integer; override;
     function IndexOfName(const Name: String): Integer; override;
     property Values[const Name: String]: String read GetValue write SetValue;
     property ValueObjects[const Name: String]: TObject read GetValueObject write SetValueObject;
+{$IFDEF VER150} //Delphi 7
     property OwnsObjects: Boolean read FOwnsObjects write FOwnsObjects;
+{$ENDIF}
     property AutoUpdateHash: Boolean read FAutoUpdateHash write FAutoUpdateHash;
-    property HashClass: TVStringHashClass read FHashClass write FHashClass;
+    property HashClass: TVStringHashClass read FHashClass write FHashClass; 
+    property KeepEmptyValues: Boolean read FKeepEmptyValues write FKeepEmptyValues;
   end;
 
 implementation
@@ -266,6 +279,7 @@ begin
   FNameHashValid := False;
 end;
 
+{$IFDEF VER150} //Delphi 7
 procedure TVHashedStringList.Clear;
 var
   I: Integer;
@@ -277,18 +291,31 @@ begin
   end;
   inherited Clear;
 end;
+{$ENDIF}
 
 constructor TVHashedStringList.Create(BucketsSize: Cardinal);
 begin
+{$IFDEF VER150} //Delphi 7
   inherited Create;
+{$ELSE} //not Delphi 7
+  Create(False, BucketsSize);
+end;
+
+constructor TVHashedStringList.Create(OwnsObjects: Boolean; BucketsSize: Cardinal);
+begin
+  inherited Create(OwnsObjects);
+{$ENDIF}
   FBucketsSize := BucketsSize;
   FValueHash := nil;
   FNameHash := nil;
   FValueHashValid := False;
   FNameHashValid := False;
+{$IFDEF VER150} //Delphi 7
   FOwnsObjects := False;
+{$ENDIF}
   FAutoUpdateHash := True;
   FHashClass := TVStringHash;
+  FKeepEmptyValues := False;
 end;
 
 procedure TVHashedStringList.Delete(Index: Integer);
@@ -298,8 +325,10 @@ var
   Key, OldValue: String;
   P: Integer;
 begin
+{$IFDEF VER150} //Delphi 7
   if FOwnsObjects then
     PutObject(Index, nil);
+{$ENDIF}
   if FAutoUpdateHash then
   begin
     OldValue := Get(Index);
@@ -341,14 +370,18 @@ begin
 end;
 
 destructor TVHashedStringList.Destroy;
+{$IFDEF VER150} //Delphi 7
 var
   I: Integer;
+{$ENDIF}
 begin
+{$IFDEF VER150} //Delphi 7
   if FOwnsObjects then
   begin
     for I := 0 to Count-1 do
       PutObject(I, nil);
   end;
+{$ENDIF}
   if Assigned(FValueHash) then
     FValueHash.Free;
   if Assigned(FNameHash) then
@@ -496,6 +529,7 @@ begin
     inherited;
 end;
 
+{$IFDEF VER150} //Delphi 7
 procedure TVHashedStringList.PutObject(Index: Integer; AObject: TObject);
 var
   obj: TObject;
@@ -507,13 +541,14 @@ begin
   end;
   inherited PutObject(Index, AObject);
 end;
+{$ENDIF}
 
 procedure TVHashedStringList.SetValue(const Name, Value: String);
 var
   I: Integer;
 begin
   I := IndexOfName(Name);
-  if Value <> '' then
+  if (Value <> '') or FKeepEmptyValues then
   begin
     if I < 0 then
       Add(Name + NameValueSeparator + Value)
