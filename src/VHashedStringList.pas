@@ -18,7 +18,7 @@ uses SysUtils, Classes, Windows;
 //Delphi version is older than 2009
 //Compiler versions: https://docwiki.embarcadero.com/RADStudio/Sydney/en/Compiler_Versions
   {$DEFINE NoOwnsObjects}
-{$ENDIF}
+{$IFEND}
 
 type
   PPVHashItem = ^PVHashItem;
