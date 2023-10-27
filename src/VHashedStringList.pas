@@ -27,7 +27,6 @@ type
     Next: PVHashItem;
     Key: String;
     Value: Integer;
-    //Key: array[0..0] of Char;
   end;
 
   TVStringHash = class
@@ -41,8 +40,6 @@ type
     destructor Destroy; override;
     procedure Add(const Key: String; Value: Integer);
     procedure Clear;
-//    function Modify(const Key: String; Value: Integer): Boolean;
-//    procedure Remove(const Key: String);
     function Delete(const Key: String; Value: Integer): Boolean;
     procedure DecValues(Value: Integer);
     procedure IncValues(Value: Integer);
@@ -113,9 +110,7 @@ var
 begin
   Hash := HashOf(Key) mod Cardinal(Length(FBuckets));
   New(Bucket);
-  //GetMem(Bucket, 8 + Length(Key)+1);
   Bucket^.Key := Key;
-  //StrPCopy(Bucket^.Key, Key);
   Bucket^.Value := Value;
   Bucket^.Next := FBuckets[Hash];
   FBuckets[Hash] := Bucket;
@@ -133,7 +128,6 @@ begin
     begin
       N := P^.Next;
       Dispose(P);
-      //FreeMem(P);
       P := N;
     end;
     FBuckets[I] := nil;
@@ -161,7 +155,6 @@ begin
   while Result^ <> nil do
   begin
     if Result^.Key = Key then
-    //if StrComp(Result^.Key, PChar(Key)) = 0 then
       Exit
     else
       Result := @Result^.Next;
@@ -177,36 +170,7 @@ begin
     Result := ((Result shl 2) or (Result shr (SizeOf(Result) * 8 - 2))) xor
       Ord(Key[I]);
 end;
-{
-function TVStringHash.Modify(const Key: String; Value: Integer): Boolean;
-var
-  P: PVHashItem;
-begin
-  P := Find(Key)^;
-  if P <> nil then
-  begin
-    Result := True;
-    P^.Value := Value;
-  end
-  else
-    Result := False;
-end;
 
-procedure TVStringHash.Remove(const Key: String);
-var
-  P: PVHashItem;
-  Prev: PPVHashItem;
-begin
-  Prev := Find(Key);
-  P := Prev^;
-  if P <> nil then
-  begin
-    Prev^ := P^.Next;
-    Dispose(P);
-    //FreeMem(P);
-  end;
-end;
-}
 function TVStringHash.Delete(const Key: String; Value: Integer): Boolean;
 var
   P: PVHashItem;
