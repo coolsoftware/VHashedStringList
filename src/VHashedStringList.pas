@@ -1,7 +1,7 @@
 unit VHashedStringList;
 
 (*
-Copyright 2012 Coolsoftware. http://blog.coolsoftware.ru/
+Copyright 2012 Vitaly Yakovlev. http://blog.coolsoftware.ru/
 
 TVHashedStringList - improved hashed string list.
 

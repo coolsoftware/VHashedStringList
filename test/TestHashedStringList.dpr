@@ -13,7 +13,8 @@ uses
   DUnitX.TestFramework,
   TestHashedStringListUnit in 'TestHashedStringListUnit.pas',
   murmurhash in '..\src\murmurhash.pas',
-  VHashedStringList in '..\src\VHashedStringList.pas';
+  VHashedStringList in '..\src\VHashedStringList.pas',
+  VIntMap in '..\src\VIntMap.pas';
 
 var
   runner : ITestRunner;
