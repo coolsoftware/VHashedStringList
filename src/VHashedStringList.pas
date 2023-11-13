@@ -77,9 +77,9 @@ type
     procedure PutObject(Index: Integer; AObject: TObject); override;
 {$ENDIF}
   public
-    constructor Create(BucketsSize: Cardinal = 256); overload;
+    constructor Create(ABucketsSize: Cardinal = 256; AAutoUpdateHash: Boolean = True); overload;
 {$IFNDEF NoOwnsObjects}
-    constructor Create(OwnsObjects: Boolean; BucketsSize: Cardinal = 256); overload;
+    constructor Create(OwnsObjects: Boolean; ABucketsSize: Cardinal = 256; AAutoUpdateHash: Boolean = True); overload;
 {$ENDIF}
     destructor Destroy; override;
 {$IFDEF NoOwnsObjects}
@@ -265,19 +265,20 @@ begin
 end;
 {$ENDIF}
 
-constructor TVHashedStringList.Create(BucketsSize: Cardinal);
+constructor TVHashedStringList.Create(ABucketsSize: Cardinal; AAutoUpdateHash: Boolean);
 begin
 {$IFDEF NoOwnsObjects}
   inherited Create;
 {$ELSE}
-  Create(False, BucketsSize);
+  Create(False, ABucketsSize, AAutoUpdateHash);
 end;
 
-constructor TVHashedStringList.Create(OwnsObjects: Boolean; BucketsSize: Cardinal);
+constructor TVHashedStringList.Create(OwnsObjects: Boolean; ABucketsSize: Cardinal;
+  AAutoUpdateHash: Boolean);
 begin
   inherited Create(OwnsObjects);
 {$ENDIF}
-  FBucketsSize := BucketsSize;
+  FBucketsSize := ABucketsSize;
   FValueHash := nil;
   FNameHash := nil;
   FValueHashValid := False;
@@ -285,7 +286,7 @@ begin
 {$IFDEF NoOwnsObjects}
   FOwnsObjects := False;
 {$ENDIF}
-  FAutoUpdateHash := True;
+  FAutoUpdateHash := AAutoUpdateHash;
   FValueHashClass := TVStringHash;
   FNameHashClass := TVStringHash;
   FKeepEmptyValues := False;
